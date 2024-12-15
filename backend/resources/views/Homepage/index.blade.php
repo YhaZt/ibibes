@@ -140,12 +140,13 @@
                     <div class="custom-btn-group d-flex">
                         <a href="#about" class="btn custom-btn smoothscroll me-3">About Us</a>
                         <div class="link-group">
-                            <a href="/join-incubatee" class="btn custom-join link smoothscroll d-block mb-2">Become an
-                                Incubatee</a>
-                            <a href="/join-mentor" class="btn custom-join link smoothscroll d-block mb-2">Become a
+                            <a href="javascript:void(0)" class="btn custom-join link smoothscroll d-block mb-2"
+                            data-bs-toggle="modal" data-bs-target="#joinIncubateeModal">Become an Incubatee</a>
+
+                            {{-- <a href="/join-mentor" class="btn custom-join link smoothscroll d-block mb-2">Become a
                                 Mentor</a>
                             <a href="/join-investor" class="btn custom-join link smoothscroll d-block">Become an
-                                Investor</a>
+                                Investor</a> --}}
                         </div>
                     </div>
                 </div>
@@ -334,7 +335,65 @@
             </div>
         </div>
     </section>
-
+    <div class="modal fade" id="joinIncubateeModal" tabindex="-1" aria-labelledby="joinIncubateeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="joinIncubateeModalLabel">Choose your category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="categoryForm">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="Student" id="student" name="category[]">
+                            <label class="form-check-label" for="student">Student</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="Faculty-Researcher" id="faculty" name="category[]">
+                            <label class="form-check-label" for="faculty">Faculty-Researcher</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="Researcher" id="researcher" name="category[]">
+                            <label class="form-check-label" for="researcher">Researcher</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="MinSU Alumni" id="alumni" name="category[]">
+                            <label class="form-check-label" for="alumni">MinSU Alumni</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="MSMEs" id="msmes" name="category[]">
+                            <label class="form-check-label" for="msmes">MSMEs</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="ARBOs" id="arbo" name="category[]">
+                            <label class="form-check-label" for="arbo">ARBOs</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="SLPAs" id="slpa" name="category[]">
+                            <label class="form-check-label" for="slpa">SLPAs</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="Farmer Association" id="farmers" name="category[]">
+                            <label class="form-check-label" for="farmers">Farmer Association</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="Cooperative" id="cooperative" name="category[]">
+                            <label class="form-check-label" for="cooperative">Cooperative</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="others" id="others" name="category[]">
+                            <label class="form-check-label" for="others">Others</label>
+                            <input type="text" id="otherText" class="form-control mt-2" placeholder="Specify" style="display: none;">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="javascript:void(0)" id="proceedButton" class="btn btn-primary">Proceed</a>
+                </div>
+            </div>
+        </div>
+    </div>
     @include('../Homepage/.about-us')
     @include('../Homepage/.other')
     @include('../Homepage/.events')

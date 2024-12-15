@@ -32,9 +32,6 @@ use App\Http\Controllers\AuthController;
 Route::get('/', [HomeController::class, 'index']);
 Route::post('login', [AuthController::class, 'login'])->name('login');
 
-Route::get('/join-incubatee', function () {
-    return view('join.register-incubatee');
-});
 Route::get('/join-mentor', function () {
     return view('join.register-mentor');
 });
@@ -52,6 +49,7 @@ Route::get('/manage-news', [NewsController::class, 'create'])->name('admin.news-
 Route::get('/news/{id}', [NewsController::class, 'show'])->name('news.show');
 Route::resource('news', NewsController::class);
 
+Route::get('/join-incubatee', [JoinController::class, 'showJoinIncubateeForm'])->name('showJoinIncubateeForm');
 Route::post('/join-incubatees', [JoinController::class, 'store_Incubatee'])->name('incubatees.store_Incubatee');
 Route::post('/join-mentors', [JoinController::class, 'store_Mentor'])->name('mentors.store_Mentor');
 Route::post('/join-investors', [JoinController::class, 'store_Investor'])->name('investors.store_investor');

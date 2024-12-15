@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Incubatee;
@@ -20,67 +20,183 @@ class JoinController extends Controller
     {
         //
     }
+    public function showJoinIncubateeForm(Request $request)
+    {
+        $categories = explode(',', $request->input('categories'));
+        return view('join.register-incubatee', compact('categories'));
+    }
 
     public function store_Incubatee(Request $request)
     {
-        $request->validate([
-            'companyName' => 'required|string|max:255',
-            'productname' => 'required|string|max:255',
-            'productimage' => 'required|image|mimes:jpeg,png|max:700',
-            'applicationfile' => 'required|mimes:pdf|max:700',
-            'productdescription' => 'required|string',
-            'innovation' => 'required|string',
-            'technology' => 'required|string',
-            'grants' => 'required|boolean',
-            'founders' => 'required|array|min:1',
-            'founders.*.surName' => 'required|string|max:255',
-            'founders.*.firstName' => 'required|string|max:255',
-            'founders.*.middleName' => 'nullable|string|max:255',
-            'founders.*.founderimage' => 'required|image|mimes:jpeg,png,gif|max:700',
-            'founders.*.birthDateTest' => 'required|date',
-            'founders.*.gender' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-        $token = Str::uuid();
-        $companyName = $request->input('companyName');
-        $productImagePath = $request->file('productimage')->store("Incubatee/{$companyName}/productimage", 'public');
-        $applicationFilePath = $request->file('applicationfile')->store("Incubatee/{$companyName}/applicationfile", 'public');
-        $seenIn = $request->input('seen_in', []);
-        $seenInString = implode(',', $seenIn);
-        foreach ($request->input('founders') as $index => $founder) {
-            $founderDirectoryPath = "Incubatee/{$companyName}/{$founder['surName']},{$founder['firstName']}/founderimage";
-            $founderImagePath = '';
-            if ($request->hasFile("founders.{$index}.founderimage")) {
-                $founderImagePath = $request->file("founders.{$index}.founderimage")->store($founderDirectoryPath, 'public');
-            }
-            do {
-                $token = Str::uuid();
-            } while (Incubatee::where('token', $token)->exists());
-            Incubatee::create([
-                'company_name' => $companyName,
-                'product_name' => $request->input('productname'),
-                'product_image' => $productImagePath,
-                'product_description' => $request->input('productdescription'),
-                'innovation_industry' => $request->input('innovation'),
-                'technology_readiness' => $request->input('technology'),
-                'seed_grant' => $request->boolean('grants'),
-                'seen_in' => $seenInString,
-                'application_file' => $applicationFilePath,
-                'email_address' => $request->input('email'),
-                'contact_number' => $request->input('contact'),
-                'founder_last_name' => $founder['surName'],
-                'founder_first_name' => $founder['firstName'],
-                'founder_middle_name' => $founder['middleName'],
-                'founder_image' => $founderImagePath,
-                'founder_birthday' => $founder['birthDateTest'],
-                'gender' => $founder['gender'],
-                'password' => bcrypt($request->input('password')),
-                'is_active' => true,
-                'token' => $token,
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'innovation' => 'required|string',
+                'are_you' => 'required|string',
+                'help_from' => 'required|string',
+                'solution_to' => 'required|string',
+                'product_to' => 'required|string',
+                'way_to' => 'required|string',
+                'founders' => 'required|array|min:1',
+                'founders.*.surName' => 'required|string|max:255',
+                'founders.*.firstName' => 'required|string|max:255',
+                'founders.*.middleName' => 'nullable|string|max:255',
+                'founders.*.founderimage' => 'required|image|mimes:jpeg,png,gif',
+                'founders.*.address' => 'required|string|max:255',
+                'founders.*.age' => 'required',
+                'founders.*.gender' => 'required',
+                'founders.*.email_address' => 'required|email|distinct|unique:users,email',
+                'founders.*.contact' => 'required',
+                'other_innovation' => 'nullable|string|max:255',
             ]);
+            $token = Str::uuid();
+            $seenIn = $request->input('seen_in', []);
+            $seenInString = implode(',', $seenIn);
+            $innovation = $request->input('innovation');
+            if ($innovation === 'others') {
+                $innovation = $request->input('other_innovation');
+            }
+            foreach ($request->input('founders') as $index => $founder) {
+                $founderDirectoryPath = "Incubatee/{$founder['surName']},{$founder['firstName']}/founderimage";
+                $founderImagePath = '';
+                if ($request->hasFile("founders.{$index}.founderimage")) {
+                    $founderImagePath = $request->file("founders.{$index}.founderimage")->store($founderDirectoryPath, 'public');
+                    Log::info("Image stored at: {$founderImagePath}");
+                } else {
+                    Log::warning("No image uploaded for founder at index {$index}");
+                }
+                do {
+                    $token = Str::uuid();
+                } while (Incubatee::where('token', $token)->exists());
+                $incubatee = Incubatee::create([
+                    'way_to' => $request->input('way_to'),
+                    'product_to' => $request->input('product_to'),
+                    'solution_to' => $request->input('solution_to'),
+                    'help_from' => $request->input('help_from'),
+                    'are_you' => $request->input('are_you'),
+                    'innovation_industry' => $innovation,
+                    'seen_in' => $seenInString,
+                    'founder_last_name' => $founder['surName'],
+                    'founder_first_name' => $founder['firstName'],
+                    'founder_middle_name' => $founder['middleName'],
+                    'founder_image' => $founderImagePath,
+                    'age' => $founder['age'],
+                    'gender' => $founder['gender'],
+                    'email_address' => $founder['email_address'],
+                    'address' => $founder['address'],
+                    'contact' => $founder['contact'],
+                    'is_active' => false,
+                    'token' => $token,
+                ]);
+
+                Log::info('Incubatee saved:', ['incubatee' => $incubatee]);
+
+                if (!$incubatee) {
+                    Log::error('Failed to save incubatee', ['founder' => $founder]);
+                    DB::rollBack();  // Rollback transaction if anything goes wrong
+                    return redirect()->back()->with('error', 'Failed to save incubatee.');
+                }
+            }
+
+            // Commit transaction if everything goes well
+            DB::commit();
+
+            // Return success response
+            return redirect()->back()->with('success', 'Incubatee information saved successfully.');
+        } catch (\Exception $e) {
+            // Rollback transaction in case of an exception
+            DB::rollBack();
+
+            // Log the error
+            Log::error('Transaction failed:', ['error' => $e->getMessage()]);
+
+            // Return error response
+            return redirect()->back()->with('error', 'Something went wrong. Please try again.');
         }
-        return redirect()->back()->with('success', 'Incubatee information saved successfully.');
     }
+    //     public function store_Incubatee(Request $request)
+    //     {
+    //         $request->validate([
+    //             // 'companyName' => 'required|string|max:255',
+    //             // 'productname' => 'required|string|max:255',
+    //             // 'productimage' => 'required|image|mimes:jpeg,png|max:700',
+    //             // 'applicationfile' => 'required|mimes:pdf|max:700',
+    //             // 'productdescription' => 'required|string',
+    //             // 'technology' => 'required|string',
+    //             // 'grants' => 'required|boolean',
+    //             'innovation' => 'required|string',
+    //             'are_you' => 'required|string',
+    //             'help_from' => 'required|string',
+    //             'solution_to' => 'required|string',
+    //             'product_to' => 'required|string',
+    //             'way_to' => 'required|string',
+    //             'founders' => 'required|array|min:1',
+    //             'founders.*.surName' => 'required|string|max:255',
+    //             'founders.*.firstName' => 'required|string|max:255',
+    //             'founders.*.middleName' => 'nullable|string|max:255',
+    //             'founders.*.founderimage' => 'required|image|mimes:jpeg,png,gif|max:700',
+    //             'founders.*.address' => 'required|string|max:255',
+    //             'founders.*.age' => 'required|int|max:2',
+    //             'founders.*.gender' => 'required|string',
+    //             'founders.*.email_address' => 'required|email|distinct|unique:users,email',
+    //             'founders.*.contact' => 'required|email',
+    //             'password' => 'required|string|min:8|confirmed',
+    //             'other_innovation' => 'nullable|string|max:255',
+    //         ]);
+    //         $token = Str::uuid();
+    //         // $companyName = $request->input('companyName');
+    //         // $productImagePath = $request->file('productimage')->store("Incubatee/{$companyName}/productimage", 'public');
+    //         // $applicationFilePath = $request->file('applicationfile')->store("Incubatee/{$companyName}/applicationfile", 'public');
+    //         $seenIn = $request->input('seen_in', []);
+    //         $seenInString = implode(',', $seenIn);
+    //         $innovation = $request->input('innovation');
+    //         if ($innovation === 'others') {
+    //             $innovation = $request->input('other_innovation');
+    //         }
+    //         foreach ($request->input('founders') as $index => $founder) {
+    //             // $founderDirectoryPath = "Incubatee/{$companyName}/{$founder['surName']},{$founder['firstName']}/founderimage";
+    //             $founderDirectoryPath = "Incubatee/{$founder['surName']},{$founder['firstName']}/founderimage";
+    //             $founderImagePath = '';
+    //             if ($request->hasFile("founders.{$index}.founderimage")) {
+    //                 $founderImagePath = $request->file("founders.{$index}.founderimage")->store($founderDirectoryPath, 'public');
+    //             }
+    //             do {
+    //                 $token = Str::uuid();
+    //             } while (Incubatee::where('token', $token)->exists());
+    //             $incubatee = Incubatee::create([
+    //                 // 'company_name' => $companyName,
+    //                 // 'product_name' => $request->input('productname'),
+    //                 // 'product_image' => $productImagePath,
+    //                 // 'product_description' => $request->input('productdescription'),
+    //                 // 'technology_readiness' => $request->input('technology'),
+    //                 // 'seed_grant' => $request->boolean('grants'),
+    //                 // 'application_file' => $applicationFilePath,
+    //                 // 'email_address' => $request->input('email'),
+    //                 // 'contact_number' => $request->input('contact'),
+    //                 // 'password' => bcrypt($request->input('password')),
+    //                 'way_to' => $request->input('way_to'),
+    //                 'product_to' => $request->input('product_to'),
+    //                 'solution_to' => $request->input('solution_to'),
+    //                 'help_from' => $request->input('help_from'),
+    //                 'are_you' => $request->input('are_you'),
+    //                 'innovation_industry' => $request->input('innovation'),
+    //                 'seen_in' => $seenInString,
+    //                 'founder_last_name' => $founder['surName'],
+    //                 'founder_first_name' => $founder['firstName'],
+    //                 'founder_middle_name' => $founder['middleName'],
+    //                 'founder_image' => $founderImagePath,
+    //                 'age' => $founder['age'],
+    //                 'gender' => $founder['gender'],
+    //                 'email_address' => $founder['email_address'],
+    //                 'address' => $founder['address'],
+    //                 'contact' => $founder['contact'],
+    //                 'is_active' => false,
+    //                 'token' => $token,
+    //             ]);
+    //         }
+    // dd($incubatee);
+    //         return redirect()->back()->with('success', 'Incubatee information saved successfully.');
+    //     }
 
     // code to get the founder data
     //     $incubatee = Incubatee::find($id); // Get the Incubatee record
@@ -147,7 +263,7 @@ class JoinController extends Controller
                 'other_information' => $request->input('other_information'),
                 'contact_number' => $request->input('contact_number'),
                 'password' => bcrypt($request->input('password')),
-                'is_active' => true,
+                'is_active' => false,
                 'token' => $token,
                 'application_file' => 'TO BE UPDATED'
             ]);
@@ -196,7 +312,7 @@ class JoinController extends Controller
             'industry_problem' => $request->input('industry_problem'),
             'business_to_support' => $request->input('business_to_support'),
             'password' => bcrypt($request->input('password')),
-            'is_active' => true,
+            'is_active' => false,
             'token' => $token,
             'application_file' => 'TO BE UPDATED'
         ]);

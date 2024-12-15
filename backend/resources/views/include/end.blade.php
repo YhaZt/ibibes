@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/color-thief@2.3.0/dist/color-thief.min.js"></script>
 
 <script>
+    // nav
 document.addEventListener("DOMContentLoaded", () => {
     const sections = document.querySelectorAll("section");
     const navLinks = document.querySelectorAll(".navbar-nav .nav-link");
@@ -51,10 +52,37 @@ document.addEventListener("DOMContentLoaded", () => {
     updateActiveLink();
 });
 
+// are you a
+document.addEventListener('DOMContentLoaded', function () {
+    const proceedButton = document.getElementById('proceedButton');
+    const categoryForm = document.getElementById('categoryForm');
+    const otherTextInput = document.getElementById('otherText');
+    const othersCheckbox = document.getElementById('others');
+    const joinLink = document.querySelector('.btn.custom-join');
+    othersCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+            otherTextInput.style.display = 'block';
+        } else {
+            otherTextInput.style.display = 'none';
+        }
+    });
+    proceedButton.addEventListener('click', function () {
+        let selectedCategories = [];
+        const checkboxes = categoryForm.querySelectorAll('input[type="checkbox"]:checked');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.value === 'others') {
+                selectedCategories.push(otherTextInput.value);
+            } else {
+                selectedCategories.push(checkbox.value);
+            }
+        });
+        let url = '/join-incubatee?categories=' + encodeURIComponent(selectedCategories.join(','));
+        proceedButton.setAttribute('href', url);
+    });
+});
 
 
-
-
+// search soon
 $(function() {
 	$('#search-menu').removeClass('toggled');
 	$('#search-icon').click(function(e) {
@@ -74,7 +102,7 @@ $(function() {
 });
 
 
-
+// footer year
     const currentYear = new Date().getFullYear();
     const startYear = 2024;
     const currentYearElement = document.getElementById('current-year');
@@ -82,7 +110,7 @@ $(function() {
     if (currentYear > startYear) {
         currentYearElement.textContent = ` - ${currentYear} `;
     }
-
+// slick
     $(document).ready(function() {
         $('.partners-products').slick({
             slidesToShow: 1,
